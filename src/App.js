@@ -1,23 +1,40 @@
-import logo from './logo.svg';
+import { Component, useState, useEffect } from 'react';
+
 import './App.css';
 
-function App() {
+const App = (props) => {
+
+  const [to, setTo] = useState(props.counter);
+  const [currency, setCurrency] = useState();
+
+  function getCurrency(from, amount) {
+    let myHeaders = new Headers();
+    myHeaders.append("apikey", "lyPt978yxB43iRMTwc1lPKlLC9MdeL5U");
+
+    let requestOptions = {
+      method: 'GET',
+      redirect: 'follow',
+      headers: myHeaders
+    };
+
+    fetch(`https://api.apilayer.com/exchangerates_data/convert?to=rub&from=${from}&amount=${amount}`, requestOptions)
+      .then(response => response.text())
+      .then(result => setTo(Math.floor(JSON.parse(result).result)))
+      .catch(error => console.log('error', error));
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div class="app">
+      <div class="values">
+        <input class="counter" onChange={(e) => setTo(e.target.value)} />
+        <div class="counter">{to}</div>
+      </div>
+      <div class="controls">
+        <button onClick={() => getCurrency('rub', to)}>RUB</button>
+        <button onClick={() => getCurrency('usd', to)}>USD</button>
+        <button onClick={() => getCurrency('eur', to)}>EUR</button>
+        <button onClick={() => getCurrency('cny', to)}>CNY</button>
+      </div>
     </div>
   );
 }
