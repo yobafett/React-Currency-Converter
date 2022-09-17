@@ -1,40 +1,52 @@
-import { Component, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import CurrencyService from './services/CurrencyService'
 
-import './App.css';
+import InputBlock from './components/CurrencyBlock/CurrencyBlock';
+import CurrencyBtn from './components/CurrencyBtn/CurrencyBtn';
+import './App.sass';
 
 const App = (props) => {
+  const [from, setFrom] = useState();
+  const [fromCurrency, setFromCurrency] = useState();
+  const [to, setTo] = useState();
+  const [toCurrency, setToCurrency] = useState();
+  const [isLoad, setIsLoad] = useState(false);
+  const [isConvertDisabled, setIsConvertDisabled] = useState(true);
+  const currencyService = new CurrencyService();
 
-  const [to, setTo] = useState(props.counter);
-  const [currency, setCurrency] = useState();
+  useEffect(() => {
+    const isConvertReady = from > 0 && fromCurrency && toCurrency && !isLoad;
+    setIsConvertDisabled(!isConvertReady);
+  }, [from, fromCurrency, to, toCurrency, isLoad])
 
-  function getCurrency(from, amount) {
-    let myHeaders = new Headers();
-    myHeaders.append("apikey", "lyPt978yxB43iRMTwc1lPKlLC9MdeL5U");
+  useEffect(() => {
+    document.title = `Currency converter ${fromCurrency.toUpperCase()} -> ${toCurrency.toUpperCase()}`;
+  }, [fromCurrency, toCurrency])
 
-    let requestOptions = {
-      method: 'GET',
-      redirect: 'follow',
-      headers: myHeaders
-    };
+  const convert = () => {
+    setIsLoad(true);
 
-    fetch(`https://api.apilayer.com/exchangerates_data/convert?to=rub&from=${from}&amount=${amount}`, requestOptions)
-      .then(response => response.text())
-      .then(result => setTo(Math.floor(JSON.parse(result).result)))
-      .catch(error => console.log('error', error));
+    currencyService.getCurrency(fromCurrency, toCurrency, from)
+      .then(res => {
+        setTo(res);
+        setIsLoad(false);
+      });
   }
 
   return (
-    <div class="app">
-      <div class="values">
-        <input class="counter" onChange={(e) => setTo(e.target.value)} />
-        <div class="counter">{to}</div>
-      </div>
-      <div class="controls">
-        <button onClick={() => getCurrency('rub', to)}>RUB</button>
-        <button onClick={() => getCurrency('usd', to)}>USD</button>
-        <button onClick={() => getCurrency('eur', to)}>EUR</button>
-        <button onClick={() => getCurrency('cny', to)}>CNY</button>
-      </div>
+    <div className="app">
+      <InputBlock
+        value={from ? from : 0}
+        setValue={setFrom}
+        setCurrency={setFromCurrency} />
+      <CurrencyBtn
+        isLoad={isLoad}
+        isDisabled={isConvertDisabled}
+        onClickEvent={convert} />
+      <InputBlock
+        value={to ? to : 0}
+        setValue={setTo}
+        setCurrency={setToCurrency} />
     </div>
   );
 }
